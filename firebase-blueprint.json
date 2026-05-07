@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account information and preferences",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "isAdmin": { "type": "boolean" }
+      },
+      "required": ["uid", "email"]
+    },
+    "OrderItem": {
+      "title": "Order Item",
+      "description": "A single product in an order",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "quantity": { "type": "number" },
+        "selectedSize": { "type": "string" },
+        "selectedColor": { "type": "string" },
+        "image": { "type": "string" }
+      },
+      "required": ["productId", "name", "price", "quantity", "selectedSize"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Purchase transaction records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "processed", "shipped", "delivered"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "shippingAddress": { "type": "string" },
+        "phoneNumber": { "type": "string" }
+      },
+      "required": ["userId", "items", "total", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Individual user profiles"
+    },
+    "orders/{orderId}": {
+      "schema": "Order",
+      "description": "System-wide orders"
+    },
+    "admins/{adminId}": {
+      "schema": { "type": "object", "properties": { "uid": { "type": "string" } } },
+      "description": "Admin collection for role verification"
+    }
+  }
+}
