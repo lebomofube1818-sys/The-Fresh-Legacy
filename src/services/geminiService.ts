@@ -1,6 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const apiKey = process.env.GEMINI_API_KEY;
+
+if (!apiKey || apiKey === "your_actual_gemini_api_key_here") {
+  console.error("GEMINI_API_KEY is missing or not configured. Please ensure you have a .env file with a valid Gemini API Key.");
+}
+
+const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
 export const geminiService = {
   /**
