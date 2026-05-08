@@ -118,24 +118,31 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
       const orderId = `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
       
       try {
-        // Save to Firestore if user is logged in
-        if (user) {
-          await addDoc(collection(db, 'orders'), {
-            orderId,
-            userId: user.uid,
-            items: cart.map(item => ({
-              id: item.id,
-              name: item.name,
-              price: item.price,
-              quantity: item.quantity,
-              size: item.selectedSize,
-              image: item.images[0]
-            })),
-            total: cartTotal,
-            status: 'completed',
-            createdAt: serverTimestamp()
-          });
-        }
+        // Save to Firestore: Always save, use 'guest' if not logged in
+        const userId = user?.uid || 'guest';
+        
+        await addDoc(collection(db, 'orders'), {
+          orderId,
+          userId: userId,
+          customerName: `${formData.firstName} ${formData.lastName}`,
+          customerEmail: formData.email,
+          shippingAddress: `${formData.address}, ${formData.city}, ${formData.postcode}`,
+          mobileNumber: formData.mobileNumber,
+          isGuest: !user,
+          items: cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            size: item.selectedSize,
+            image: item.images[0]
+          })),
+          total: cartTotal,
+          status: 'pending',
+          createdAt: serverTimestamp(),
+          estimatedArrival: null,
+          receivedConfirmation: false
+        });
 
         // Simulate payment delay
         setTimeout(() => {

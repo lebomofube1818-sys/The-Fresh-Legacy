@@ -32,6 +32,7 @@ service cloud.firestore {
         && (!('isAdmin' in data) || data.isAdmin == false);
     }
 
+    // User Profiles
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
@@ -40,9 +41,17 @@ service cloud.firestore {
         && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'sizeProfile', 'updatedAt']);
     }
 
+    // Wishlist - Recursive access for owner
+    match /wishlists/{ownerId}/{document=**} {
+      allow read, write: if isSignedIn() && request.auth.uid == ownerId;
+    }
+
     // Order Validation
     function isValidOrder(data) {
-      return data.userId == request.auth.uid
+      return (
+        (isSignedIn() && data.userId == request.auth.uid) ||
+        (!isSignedIn() && data.userId == 'guest')
+      )
         && data.items is list && data.items.size() > 0 && data.items.size() <= 50
         && data.total is number && data.total >= 0
         && data.status in ['pending', 'processed', 'shipped', 'delivered', 'completed']
@@ -50,13 +59,14 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow get: if (isSignedIn() && (existing().userId == request.auth.uid || isAdmin()));
       // For list, evaluate against resource.data to prevent scraping
       allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       
-      allow create: if isSignedIn() && isValidOrder(incoming());
+      allow create: if isValidOrder(incoming());
       
-      allow update: if isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+      allow update: if (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'estimatedArrival']))
+                    || (isSignedIn() && existing().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['receivedConfirmation']));
       allow delete: if false;
     }
 

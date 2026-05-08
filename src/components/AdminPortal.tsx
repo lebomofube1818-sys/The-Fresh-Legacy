@@ -30,11 +30,16 @@ interface Order {
   id: string;
   orderId: string;
   userId: string;
+  customerName: string;
   customerEmail: string;
+  shippingAddress: string;
+  mobileNumber: string;
   items: any[];
   total: number;
   status: string;
   createdAt: any;
+  estimatedArrival: string | null;
+  receivedConfirmation: boolean;
 }
 
 export default function AdminPortal({ onBack }: { onBack: () => void }) {
@@ -42,6 +47,13 @@ export default function AdminPortal({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [estimatedArrival, setEstimatedArrival] = useState<string>('');
+
+  useEffect(() => {
+    if (selectedOrder) {
+      setEstimatedArrival(selectedOrder.estimatedArrival || '');
+    }
+  }, [selectedOrder]);
 
   useEffect(() => {
     const ordersRef = collection(db, 'orders');
@@ -53,7 +65,7 @@ export default function AdminPortal({ onBack }: { onBack: () => void }) {
         ...doc.data()
       })) as Order[];
       setOrders(ordersData);
-      setLoading(loading && false);
+      setLoading(false);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'orders');
     });
@@ -61,10 +73,10 @@ export default function AdminPortal({ onBack }: { onBack: () => void }) {
     return () => unsubscribe();
   }, []);
 
-  const updateStatus = async (orderId: string, newStatus: string) => {
+  const updateOrder = async (orderId: string, updates: Partial<Order>) => {
     try {
       const orderRef = doc(db, 'orders', orderId);
-      await updateDoc(orderRef, { status: newStatus });
+      await updateDoc(orderRef, updates as any);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `orders/${orderId}`);
     }
@@ -178,18 +190,26 @@ export default function AdminPortal({ onBack }: { onBack: () => void }) {
                       >
                         <CardContent className="p-0">
                           <div className="flex flex-col md:flex-row md:items-center p-6 gap-6">
-                            <div className="flex-1">
+                             <div className="flex-1">
                                <div className="flex items-center gap-3 mb-2">
                                   <Badge className={`rounded-full px-3 py-1 font-black uppercase text-[9px] tracking-widest flex items-center gap-1.5 ${getStatusColor(order.status)}`}>
                                      {getStatusIcon(order.status)}
                                      {order.status}
                                   </Badge>
                                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">#{order.orderId || order.id.slice(0, 8)}</span>
+                                  {order.receivedConfirmation && (
+                                    <Badge className="bg-green-100 text-green-700 border-none rounded-full px-3 py-1 font-black uppercase text-[9px] tracking-widest">
+                                       Received by Customer
+                                    </Badge>
+                                  )}
                                </div>
-                               <h3 className="text-xl font-black italic tracking-tighter uppercase">{order.customerEmail}</h3>
+                               <h3 className="text-xl font-black italic tracking-tighter uppercase">{order.customerName || order.customerEmail || 'LEGACY ORDER'}</h3>
+                               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2 mt-1">
+                                  <Mail className="w-3 h-3" /> {order.customerEmail || 'No email provided'}
+                               </p>
                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2 mt-1">
                                   <Calendar className="w-3 h-3" />
-                                  {order.createdAt?.toDate().toLocaleDateString()} at {order.createdAt?.toDate().toLocaleTimeString()}
+                                  {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString() : 'Recent'} at {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleTimeString() : ''}
                                </p>
                             </div>
 
@@ -247,31 +267,63 @@ export default function AdminPortal({ onBack }: { onBack: () => void }) {
                                            </h4>
                                            <div className="space-y-2">
                                               <p className="text-xs font-bold text-gray-600 flex items-center gap-2"><MapPin className="w-3 h-3" /> Shipping Address</p>
-                                              <p className="text-xs font-medium text-gray-400 bg-white p-3 rounded-xl">Zimbabwe, Harare, 123 Street</p>
+                                              <p className="text-xs font-medium text-gray-400 bg-white p-3 rounded-xl">{order.shippingAddress || 'No address provided'}</p>
+                                              {order.mobileNumber && (
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">Mobile: {order.mobileNumber}</p>
+                                              )}
                                            </div>
                                         </div>
 
                                         <div className="space-y-4">
                                            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
-                                              <CheckCircle2 className="w-4 h-4" /> Update Status
+                                              <CheckCircle2 className="w-4 h-4" /> Operations
                                            </h4>
-                                           <div className="grid grid-cols-2 gap-2">
-                                              {['pending', 'processed', 'shipped', 'completed'].map((s) => (
-                                                <button
-                                                  key={s}
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    updateStatus(order.id, s);
-                                                  }}
-                                                  className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                                                    order.status === s 
-                                                      ? 'bg-brand-primary text-white' 
-                                                      : 'bg-white text-gray-400 hover:bg-gray-100 hover:text-black'
-                                                  }`}
-                                                >
-                                                  {s}
-                                                </button>
-                                              ))}
+                                           <div className="space-y-4">
+                                             <div>
+                                               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Update Status</p>
+                                               <div className="grid grid-cols-2 gap-2">
+                                                 {['pending', 'processed', 'shipped', 'completed'].map((s) => (
+                                                   <button
+                                                     key={s}
+                                                     onClick={(e) => {
+                                                       e.stopPropagation();
+                                                       updateOrder(order.id, { status: s });
+                                                     }}
+                                                     className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                                                       order.status === s 
+                                                         ? 'bg-brand-primary text-white' 
+                                                         : 'bg-white text-gray-400 hover:bg-gray-100 hover:text-black shadow-sm border border-gray-100'
+                                                     }`}
+                                                   >
+                                                     {s}
+                                                   </button>
+                                                 ))}
+                                               </div>
+                                             </div>
+
+                                             <div className="pt-2">
+                                               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Estimated Arrival</p>
+                                               <div className="flex gap-2">
+                                                 <input 
+                                                   type="text" 
+                                                   value={selectedOrder?.id === order.id ? estimatedArrival : (order.estimatedArrival || '')}
+                                                   onChange={(e) => setEstimatedArrival(e.target.value)}
+                                                   onClick={(e) => e.stopPropagation()}
+                                                   placeholder="e.g. May 15, 2024"
+                                                   className="flex-1 bg-white border border-gray-100 rounded-xl px-4 py-2 text-[10px] font-bold focus:ring-2 focus:ring-brand-primary"
+                                                 />
+                                                 <Button 
+                                                   size="sm" 
+                                                   onClick={(e) => {
+                                                     e.stopPropagation();
+                                                     updateOrder(order.id, { estimatedArrival });
+                                                   }}
+                                                   className="rounded-xl bg-black text-white px-4 text-[9px] font-black uppercase"
+                                                 >
+                                                   Set
+                                                 </Button>
+                                               </div>
+                                             </div>
                                            </div>
                                         </div>
                                      </div>
@@ -280,7 +332,14 @@ export default function AdminPortal({ onBack }: { onBack: () => void }) {
                                         <Button variant="outline" className="rounded-xl font-bold text-[10px] uppercase tracking-widest h-12">
                                            Print Invoice
                                         </Button>
-                                        <Button className="rounded-xl font-black italic uppercase tracking-tighter text-[10px] h-12 bg-black text-white hover:bg-gray-800">
+                                        <Button 
+                                          className="rounded-xl font-black italic uppercase tracking-tighter text-[10px] h-12 bg-black text-white hover:bg-gray-800"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            // Simulate notification
+                                            alert("Customer notified of order update.");
+                                          }}
+                                        >
                                            Notify Customer
                                         </Button>
                                      </div>

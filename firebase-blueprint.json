@@ -60,6 +60,19 @@
     "admins/{adminId}": {
       "schema": { "type": "object", "properties": { "uid": { "type": "string" } } },
       "description": "Admin collection for role verification"
+    },
+    "wishlists/{userId}/{allPaths=**}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "price": { "type": "number" },
+          "image": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "description": "User wishlist items"
     }
   }
 }

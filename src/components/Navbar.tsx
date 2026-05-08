@@ -19,6 +19,7 @@ interface NavbarProps {
   onProductSelect?: (product: Product) => void;
   onProfileClick?: () => void;
   onWishlistClick?: () => void;
+  onAuthOpen?: () => void;
   activeCategory?: string;
 }
 
@@ -28,6 +29,7 @@ export default function Navbar({
   onProductSelect, 
   onProfileClick,
   onWishlistClick,
+  onAuthOpen,
   activeCategory 
 }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -265,10 +267,10 @@ export default function Navbar({
                           <p className="text-[9px] text-gray-400 uppercase tracking-widest leading-relaxed">Sign in for early access and exclusive drops</p>
                         </div>
                         <Button 
-                          onClick={() => { loginWithGoogle(); setShowUserMenu(false); }}
+                          onClick={() => { onAuthOpen?.(); setShowUserMenu(false); }}
                           className="w-full bg-brand-primary text-white hover:bg-gray-800 rounded-xl py-5 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-primary/10"
                         >
-                          Sign In with Google
+                          Sign In / Join
                         </Button>
                       </div>
                     )}
@@ -489,10 +491,10 @@ export default function Navbar({
                     </>
                   ) : (
                     <Button 
-                      onClick={() => loginWithGoogle()}
+                      onClick={() => onAuthOpen?.()}
                       className="w-full bg-brand-primary text-white rounded-full py-6 font-bold uppercase text-sm"
                     >
-                      Sign In with Google
+                      Sign In / Join
                     </Button>
                   )}
                 </div>

@@ -13,6 +13,7 @@ import FilterSheet from '@/components/FilterSheet';
 import Checkout from '@/components/Checkout';
 import OrderSuccess from '@/components/OrderSuccess';
 import ProfileView from '@/components/ProfileView';
+import AuthModal from '@/components/AuthModal';
 import WishlistView from '@/components/WishlistView';
 import { MOCK_PRODUCTS } from '@/constants';
 import { ArrowRight, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -43,6 +44,7 @@ export default function App() {
   const [category, setCategory] = useState('all');
   const [view, setView] = useState<View>('shop');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
 
   useEffect(() => {
@@ -110,8 +112,14 @@ export default function App() {
           onProfileClick={() => setView('profile')}
           onWishlistClick={() => setView('wishlist')}
           onCheckout={() => setView('checkout')}
+          onAuthOpen={() => setShowAuthModal(true)}
         />
-        <ProfileView onBack={() => setView('shop')} onAdminClick={() => setView('admin')} />
+        <ProfileView onBack={() => setView('shop')} onAdminClick={() => setView('admin')} onAuthOpen={() => setShowAuthModal(true)} />
+        <AnimatePresence>
+          {showAuthModal && (
+            <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+          )}
+        </AnimatePresence>
       </>
     );
   }
@@ -194,6 +202,7 @@ export default function App() {
           setView('checkout');
           window.scrollTo(0, 0);
         }}
+        onAuthOpen={() => setShowAuthModal(true)}
       />
       
       <main>
@@ -403,7 +412,11 @@ export default function App() {
                 Step into the future with exclusive access to stories, inspiration, and limited-edition releases. 
                 Our members are at the heart of everything we do.
               </p>
-              <Button variant="outline" className="text-white border-white border-2 hover:bg-white hover:text-black rounded-full px-8 py-6 font-black uppercase italic tracking-tighter transition-all">
+              <Button 
+                onClick={() => setShowAuthModal(true)}
+                variant="outline" 
+                className="text-white border-white border-2 hover:bg-white hover:text-black rounded-full px-8 py-6 font-black uppercase italic tracking-tighter transition-all"
+              >
                 Join Today
               </Button>
             </div>
@@ -423,6 +436,12 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      <AnimatePresence>
+        {showAuthModal && (
+          <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
