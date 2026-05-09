@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, CreditCard, Truck, ShieldCheck, CheckCircle2, Smartphone } from 'lucide-react';
+import { ChevronLeft, CreditCard, Truck, ShieldCheck, CheckCircle2, Smartphone, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/CartContext';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AFRICAN_COUNTRIES } from '@/constants';
 
 import { db, handleFirestoreError, OperationType } from '@/lib/firebase';
 import { useAuth } from '@/AuthContext';
@@ -29,10 +31,12 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
     address: '',
     city: '',
     postcode: '',
+    country: 'Lesotho',
     cardNumber: '',
     expiry: '',
     cvv: '',
-    mobileNumber: ''
+    mobileNumber: '',
+    countryCode: '+266'
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
@@ -90,9 +94,11 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
       if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) newErrors.email = 'Valid email is required';
       if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
       if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+      if (formData.mobileNumber.length < 8) newErrors.mobileNumber = 'Enter a valid phone number';
       if (!formData.address.trim()) newErrors.address = 'Address is required';
       if (!formData.city.trim()) newErrors.city = 'City is required';
       if (!formData.postcode.trim()) newErrors.postcode = 'Postcode is required';
+      if (!formData.country.trim()) newErrors.country = 'Country is required';
     } else {
       if (paymentMethod === 'card') {
         const rawCard = formData.cardNumber.replace(/\s/g, '');
@@ -100,7 +106,7 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
         if (!formData.expiry.match(/^(0[1-9]|1[0-2])\/\d{2}$/)) newErrors.expiry = 'Use MM/YY format';
         if (formData.cvv.length < 3) newErrors.cvv = 'Invalid CVV';
       } else {
-        if (formData.mobileNumber.length < 10) newErrors.mobileNumber = 'Enter a valid 10-digit mobile number';
+        if (formData.mobileNumber.length < 8) newErrors.mobileNumber = 'Enter a valid mobile number';
       }
     }
 
@@ -126,8 +132,8 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
           userId: userId,
           customerName: `${formData.firstName} ${formData.lastName}`,
           customerEmail: formData.email,
-          shippingAddress: `${formData.address}, ${formData.city}, ${formData.postcode}`,
-          mobileNumber: formData.mobileNumber,
+          shippingAddress: `${formData.address}, ${formData.city}, ${formData.postcode}, ${formData.country}`,
+          mobileNumber: `${formData.countryCode}${formData.mobileNumber}`,
           isGuest: !user,
           items: cart.map(item => ({
             id: item.id,
@@ -227,6 +233,42 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                           {errors.lastName && <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider pl-1">{errors.lastName}</p>}
                         </div>
                       </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Phone Number</label>
+                        <div className="flex gap-2">
+                          <div className="w-[140px]">
+                            <Select 
+                              value={formData.countryCode} 
+                              onValueChange={(val) => setFormData(prev => ({ ...prev, countryCode: val }))}
+                            >
+                              <SelectTrigger className="rounded-lg py-6 border-gray-200">
+                                <SelectValue placeholder="Code" />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-[300px]">
+                                {AFRICAN_COUNTRIES.map((country) => (
+                                  <SelectItem key={country.code + country.name} value={country.code}>
+                                    <span className="mr-2">{country.flag}</span>
+                                    <span>{country.code}</span>
+                                    <span className="text-[10px] text-gray-400 ml-1">({country.name})</span>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <Input 
+                              placeholder="Mobile Number" 
+                              name="mobileNumber"
+                              value={formData.mobileNumber}
+                              onChange={handleInputChange}
+                              className={`rounded-lg py-6 ${errors.mobileNumber ? 'border-red-500' : ''}`}
+                            />
+                          </div>
+                        </div>
+                        {errors.mobileNumber && <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider pl-1">{errors.mobileNumber}</p>}
+                      </div>
+
                       <div className="space-y-1">
                         <Input 
                           placeholder="Address line 1" 
@@ -258,6 +300,26 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                           />
                           {errors.postcode && <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider pl-1">{errors.postcode}</p>}
                         </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <Select 
+                          value={formData.country} 
+                          onValueChange={(val) => setFormData(prev => ({ ...prev, country: val }))}
+                        >
+                          <SelectTrigger className="rounded-lg py-6 border-gray-200">
+                            <SelectValue placeholder="Select Country" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[300px]">
+                            {AFRICAN_COUNTRIES.map((country) => (
+                              <SelectItem key={'shipping-' + country.name} value={country.name}>
+                                <span className="mr-2">{country.flag}</span>
+                                <span>{country.name}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.country && <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider pl-1">{errors.country}</p>}
                       </div>
                     </div>
                 </div>
@@ -337,13 +399,18 @@ export default function Checkout({ onBack, onSuccess }: CheckoutProps) {
                              </p>
                           </div>
                           <div className="space-y-1">
-                            <Input 
-                              placeholder={`${paymentMethod === 'ecocash' ? 'EcoCash' : 'M-Pesa'} Mobile Number (e.g. 07XXXXXXXX)`} 
-                              name="mobileNumber"
-                              value={formData.mobileNumber}
-                              onChange={handleInputChange}
-                              className={`rounded-lg py-6 ${errors.mobileNumber ? 'border-red-500' : ''}`}
-                            />
+                            <div className="flex gap-2">
+                              <div className="w-[100px] border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 text-xs font-bold">
+                                {formData.countryCode}
+                              </div>
+                              <Input 
+                                placeholder={`${paymentMethod === 'ecocash' ? 'EcoCash' : 'M-Pesa'} Mobile Number`} 
+                                name="mobileNumber"
+                                value={formData.mobileNumber}
+                                onChange={handleInputChange}
+                                className={`flex-1 rounded-lg py-6 ${errors.mobileNumber ? 'border-red-500' : ''}`}
+                              />
+                            </div>
                             {errors.mobileNumber && <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider pl-1">{errors.mobileNumber}</p>}
                           </div>
                         </div>

@@ -23,6 +23,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    confirmPassword: '',
     displayName: '',
     mobileNumber: '',
     shippingAddress: ''
@@ -32,6 +33,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Password matching validation
+    if (mode === 'signup' && formData.password !== formData.confirmPassword) {
+      setError('Vault keys do not match. Please verify your identity credentials.');
+      setLoading(false);
+      return;
+    }
 
     try {
       if (mode === 'login') {
@@ -269,6 +277,30 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   </button>
                 </div>
               </div>
+
+              <AnimatePresence>
+                {mode === 'signup' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-3 overflow-hidden"
+                  >
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 ml-1">Confirm Vault Key</label>
+                    <div className="relative group">
+                      <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300 group-focus-within:text-black transition-colors" />
+                      <Input
+                        required={mode === 'signup'}
+                        type={showPassword ? 'text' : 'password'}
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        className="bg-zinc-50 border-zinc-100 rounded-[1.5rem] pl-16 pr-16 h-16 text-sm font-bold focus:ring-4 focus:ring-black/5 transition-all placeholder:text-zinc-300"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {error && (
                 <motion.div 

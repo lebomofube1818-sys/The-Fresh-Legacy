@@ -43,7 +43,7 @@
         "status": { "type": "string", "enum": ["pending", "processed", "shipped", "delivered"] },
         "createdAt": { "type": "string", "format": "date-time" },
         "shippingAddress": { "type": "string" },
-        "phoneNumber": { "type": "string" }
+        "mobileNumber": { "type": "string" }
       },
       "required": ["userId", "items", "total", "status", "createdAt"]
     }

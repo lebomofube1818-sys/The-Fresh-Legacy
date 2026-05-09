@@ -15,6 +15,7 @@ import OrderSuccess from '@/components/OrderSuccess';
 import ProfileView from '@/components/ProfileView';
 import AuthModal from '@/components/AuthModal';
 import WishlistView from '@/components/WishlistView';
+import { FooterInfoDialog } from '@/components/FooterInfoDialog';
 import { MOCK_PRODUCTS } from '@/constants';
 import { ArrowRight, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,7 @@ export default function App() {
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
+  const [footerModalType, setFooterModalType] = useState<'payment' | 'careers' | 'about' | 'membership' | 'orderStatus' | 'shipping' | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -381,7 +383,7 @@ export default function App() {
               <ul className="space-y-4 text-xs font-bold text-gray-500 uppercase tracking-widest">
                 <li className="hover:text-white transition-colors cursor-pointer">Gift Cards</li>
                 <li className="hover:text-white transition-colors cursor-pointer">Find a Store</li>
-                <li className="hover:text-white transition-colors cursor-pointer">Membership</li>
+                <li onClick={() => setShowAuthModal(true)} className="hover:text-white transition-colors cursor-pointer text-brand-accent">Membership</li>
                 <li className="hover:text-white transition-colors cursor-pointer">The Journal</li>
                 <li className="hover:text-white transition-colors cursor-pointer">Site Feedback</li>
               </ul>
@@ -390,18 +392,17 @@ export default function App() {
               <h4 className="font-black text-xl uppercase tracking-widest italic tracking-tighter">Help</h4>
               <ul className="space-y-4 text-xs font-bold text-gray-500 uppercase tracking-widest">
                 <li className="hover:text-white transition-colors cursor-pointer">Get Help</li>
-                <li className="hover:text-white transition-colors cursor-pointer">Order Status</li>
-                <li className="hover:text-white transition-colors cursor-pointer">Shipping & Delivery</li>
+                <li onClick={() => setFooterModalType('orderStatus')} className="hover:text-white transition-colors cursor-pointer text-brand-accent">Order Status</li>
+                <li onClick={() => setFooterModalType('shipping')} className="hover:text-white transition-colors cursor-pointer text-brand-accent">Shipping & Delivery</li>
                 <li className="hover:text-white transition-colors cursor-pointer">Returns</li>
-                <li className="hover:text-white transition-colors cursor-pointer">Payment Options</li>
+                <li onClick={() => setFooterModalType('payment')} className="hover:text-white transition-colors cursor-pointer text-brand-accent">Payment Options</li>
               </ul>
             </div>
             <div className="space-y-8">
               <h4 className="font-black text-xl uppercase tracking-widest italic tracking-tighter">Company</h4>
               <ul className="space-y-4 text-xs font-bold text-gray-500 uppercase tracking-widest">
-                <li className="hover:text-white transition-colors cursor-pointer">About The Fresh Legacy</li>
-                <li className="hover:text-white transition-colors cursor-pointer">News</li>
-                <li className="hover:text-white transition-colors cursor-pointer">Careers</li>
+                <li onClick={() => setFooterModalType('about')} className="hover:text-white transition-colors cursor-pointer text-brand-accent">About The Fresh Legacy</li>
+                <li onClick={() => setFooterModalType('careers')} className="hover:text-white transition-colors cursor-pointer text-brand-accent">Careers (Modeling)</li>
                 <li className="hover:text-white transition-colors cursor-pointer">Investors</li>
                 <li className="hover:text-white transition-colors cursor-pointer">Legacy Impact</li>
               </ul>
@@ -412,20 +413,28 @@ export default function App() {
                 Step into the future with exclusive access to stories, inspiration, and limited-edition releases. 
                 Our members are at the heart of everything we do.
               </p>
-              <Button 
-                onClick={() => setShowAuthModal(true)}
-                variant="outline" 
-                className="text-white border-white border-2 hover:bg-white hover:text-black rounded-full px-8 py-6 font-black uppercase italic tracking-tighter transition-all"
+              
+              <motion.div 
+                whileHover={{ scale: 1.02 }} 
+                whileTap={{ scale: 0.98 }} 
+                className="relative group w-fit"
               >
-                Join Today
-              </Button>
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-accent to-white rounded-full blur-sm opacity-20 group-hover:opacity-50 transition duration-1000"></div>
+                <Button 
+                  onClick={() => setShowAuthModal(true)}
+                  className="relative px-6 py-4 bg-black border border-white/20 rounded-full flex items-center divide-x divide-white/20 shadow-xl transition-all"
+                >
+                  <span className="pr-4 text-white font-black uppercase italic tracking-tighter text-sm">ENTER THE VAULT</span>
+                  <span className="pl-4 text-brand-accent font-black uppercase tracking-[0.1em] text-[9px] animate-pulse">CLICK ME</span>
+                </Button>
+              </motion.div>
             </div>
           </div>
           
           <div className="flex flex-col lg:flex-row items-center justify-between pt-12 border-t border-gray-800 text-[10px] text-gray-600 font-black uppercase tracking-[0.3em]">
             <div className="flex items-center gap-10 flex-wrap justify-center mb-8 lg:mb-0">
                <p className="text-gray-400">© 2026 The Fresh Legacy, Inc. All Rights Reserved</p>
-               <span className="hover:text-white cursor-pointer transition-colors">United Kingdom</span>
+               <span className="hover:text-white cursor-pointer transition-colors">Lesotho</span>
             </div>
             <div className="flex flex-wrap gap-x-12 gap-y-4 justify-center">
                <span className="hover:text-white cursor-pointer transition-colors">Guides</span>
@@ -440,6 +449,13 @@ export default function App() {
       <AnimatePresence>
         {showAuthModal && (
           <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+        )}
+        {footerModalType && (
+          <FooterInfoDialog 
+            isOpen={!!footerModalType} 
+            onClose={() => setFooterModalType(null)} 
+            type={footerModalType} 
+          />
         )}
       </AnimatePresence>
     </div>
