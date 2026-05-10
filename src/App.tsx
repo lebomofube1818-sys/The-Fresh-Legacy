@@ -16,6 +16,7 @@ import ProfileView from '@/components/ProfileView';
 import AuthModal from '@/components/AuthModal';
 import WishlistView from '@/components/WishlistView';
 import { FooterInfoDialog } from '@/components/FooterInfoDialog';
+import { VaultButton } from '@/components/VaultButton';
 import { MOCK_PRODUCTS } from '@/constants';
 import { ArrowRight, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -37,11 +38,13 @@ const INITIAL_FILTERS: FilterState = {
 };
 
 import AdminPortal from '@/components/AdminPortal';
-import { db, auth, syncUserProfile } from '@/lib/firebase';
+import { db, auth, syncUserProfile, handleFirestoreError, OperationType } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { collection, onSnapshot } from 'firebase/firestore';
 
 export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [category, setCategory] = useState('all');
   const [view, setView] = useState<View>('shop');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
@@ -50,15 +53,37 @@ export default function App() {
   const [footerModalType, setFooterModalType] = useState<'payment' | 'careers' | 'about' | 'membership' | 'orderStatus' | 'shipping' | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    // Sync Products
+    const productsRef = collection(db, 'products');
+    const unsubscribeProducts = onSnapshot(productsRef, (snapshot) => {
+      const productsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Product[];
+      
+      if (productsData.length === 0) {
+        setProducts(MOCK_PRODUCTS);
+      } else {
+        setProducts(productsData);
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'products');
+      setProducts(MOCK_PRODUCTS);
+    });
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         syncUserProfile(user);
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribeProducts();
+      unsubscribeAuth();
+    };
   }, []);
 
-  const filteredProducts = MOCK_PRODUCTS.filter((product) => {
+  const filteredProducts = products.filter((product) => {
     // Category (Global type) Filter
     const matchesCategory = (() => {
       if (category === 'all') return product.isNew;
@@ -414,20 +439,7 @@ export default function App() {
                 Our members are at the heart of everything we do.
               </p>
               
-              <motion.div 
-                whileHover={{ scale: 1.02 }} 
-                whileTap={{ scale: 0.98 }} 
-                className="relative group w-fit"
-              >
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-accent to-white rounded-full blur-sm opacity-20 group-hover:opacity-50 transition duration-1000"></div>
-                <Button 
-                  onClick={() => setShowAuthModal(true)}
-                  className="relative px-6 py-4 bg-black border border-white/20 rounded-full flex items-center divide-x divide-white/20 shadow-xl transition-all"
-                >
-                  <span className="pr-4 text-white font-black uppercase italic tracking-tighter text-sm">ENTER THE VAULT</span>
-                  <span className="pl-4 text-brand-accent font-black uppercase tracking-[0.1em] text-[9px] animate-pulse">CLICK ME</span>
-                </Button>
-              </motion.div>
+              <VaultButton onClick={() => setShowAuthModal(true)} />
             </div>
           </div>
           

@@ -44,7 +44,8 @@ export const MOCK_PRODUCTS: Product[] = [
     sport: 'running',
     isNew: true,
     rating: 4.8,
-    reviewCount: 124
+    reviewCount: 124,
+    stockCount: 50
   },
   {
     id: 'prod-2',
@@ -62,7 +63,8 @@ export const MOCK_PRODUCTS: Product[] = [
     sport: 'lifestyle',
     isNew: true,
     rating: 4.9,
-    reviewCount: 350
+    reviewCount: 350,
+    stockCount: 35
   },
   {
     id: 'prod-3',
@@ -80,7 +82,8 @@ export const MOCK_PRODUCTS: Product[] = [
     sport: 'basketball',
     isNew: false,
     rating: 4.7,
-    reviewCount: 89
+    reviewCount: 89,
+    stockCount: 12
   },
   {
     id: 'prod-4',
@@ -97,7 +100,8 @@ export const MOCK_PRODUCTS: Product[] = [
     sport: 'lifestyle',
     isSale: true,
     rating: 4.6,
-    reviewCount: 56
+    reviewCount: 56,
+    stockCount: 100
   },
   {
     id: 'prod-5',
@@ -114,6 +118,7 @@ export const MOCK_PRODUCTS: Product[] = [
     sport: 'training',
     isNew: true,
     rating: 4.9,
-    reviewCount: 210
+    reviewCount: 210,
+    stockCount: 80
   }
 ];

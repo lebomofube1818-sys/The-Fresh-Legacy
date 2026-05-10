@@ -10,11 +10,11 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
     
-    // Check if user is in 'admins' collection or has the owner email
+    // Check if user is in 'admins' collection or has the owner email verified
     function isAdmin() { 
       return isSignedIn() && (
         exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-        request.auth.token.email == 'lebomofube1818@gmail.com'
+        (request.auth.token.email == 'lebomofube1818@gmail.com' && request.auth.token.email_verified == true)
       ); 
     }
     
@@ -78,6 +78,26 @@ service cloud.firestore {
 
     match /test/{docId} {
       allow get: if true; // For testConnection()
+    }
+
+    // Product Catalog
+    function isValidProduct(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && data.category is string && data.category.size() > 0
+        && data.price is number && data.price >= 0
+        && data.description is string && data.description.size() <= 2000
+        && data.images is list && data.images.size() > 0
+        && data.gender in ['men', 'women', 'kids', 'unisex']
+        && data.sport in ['lifestyle', 'running', 'basketball', 'training']
+        && data.stockCount is number && data.stockCount >= 0;
+    }
+
+    match /products/{productId} {
+      allow read: if true; // Public can browse products
+      allow create: if isAdmin() && isValidProduct(incoming());
+      allow update: if (isAdmin() && isValidProduct(incoming()))
+                    || (isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['rating', 'reviewCount', 'stockCount']));
+      allow delete: if isAdmin();
     }
   }
 }

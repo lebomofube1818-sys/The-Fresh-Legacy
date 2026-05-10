@@ -14,6 +14,7 @@ export interface Product {
   isMemberExclusive?: boolean;
   rating?: number;
   reviewCount?: number;
+  stockCount: number;
 }
 
 export interface CartItem extends Product {

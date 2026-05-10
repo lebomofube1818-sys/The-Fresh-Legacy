@@ -213,6 +213,13 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                   <span className="text-gray-400 font-medium">({product.reviewCount} Reviews)</span>
                 </div>
               </div>
+              
+              <div className="flex items-center gap-2 py-2">
+                <div className={`h-2 w-2 rounded-full ${product.stockCount > 10 ? 'bg-green-500' : product.stockCount > 0 ? 'bg-amber-500 animate-pulse' : 'bg-red-500'}`} />
+                <span className={`text-xs font-black uppercase tracking-widest ${product.stockCount > 10 ? 'text-green-600' : product.stockCount > 0 ? 'text-amber-600' : 'text-red-600'}`}>
+                  {product.stockCount > 10 ? 'In Stock' : product.stockCount > 0 ? `Only ${product.stockCount} Left` : 'Out of Stock'}
+                </span>
+              </div>
             </div>
 
             <Separator />
@@ -281,12 +288,15 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
             <div className="flex flex-col gap-3">
               <Button 
                 className={`w-full h-16 rounded-full text-lg font-bold transition-all ${
+                  product.stockCount === 0 ? 'bg-gray-400 cursor-not-allowed' :
                   isAdded ? 'bg-green-600 hover:bg-green-700' : 'bg-brand-primary hover:bg-gray-800'
                 } text-white`}
-                disabled={!selectedSize || isAdding}
+                disabled={!selectedSize || isAdding || product.stockCount === 0}
                 onClick={handleAddToCart}
               >
-                {isAdded ? (
+                {product.stockCount === 0 ? (
+                  "Sold Out"
+                ) : isAdded ? (
                   <span className="flex items-center gap-2"><Check className="w-5 h-5" /> Added to Bag</span>
                 ) : isAdding ? (
                   "Adding..."

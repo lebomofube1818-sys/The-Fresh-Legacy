@@ -77,14 +77,22 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
               Member Exclusive
             </Badge>
           )}
+          {product.stockCount === 0 && (
+            <Badge className="bg-black text-white border-none font-bold px-3 uppercase text-[10px]">
+              Sold Out
+            </Badge>
+          )}
         </div>
 
         {/* Quick Actions */}
         <div className="absolute bottom-4 right-4 translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
           <button 
             onClick={handleQuickAdd}
-            disabled={isAdded}
-            className={`p-3 rounded-full shadow-lg transition-all transform active:scale-95 ${isAdded ? 'bg-green-500 text-white' : 'bg-white hover:bg-gray-100'}`}
+            disabled={isAdded || product.stockCount === 0}
+            className={`p-3 rounded-full shadow-lg transition-all transform active:scale-95 ${
+              product.stockCount === 0 ? 'bg-gray-400 cursor-not-allowed' :
+              isAdded ? 'bg-green-500 text-white' : 'bg-white hover:bg-gray-100'
+            }`}
           >
             <AnimatePresence mode="wait">
               {isAdded ? (

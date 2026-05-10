@@ -57,13 +57,33 @@ export default function ProfileView({ onBack, onAdminClick, onAuthOpen }: Profil
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [view, setView] = useState<'orders' | 'settings'>('orders');
   
-  // Settings State
+  const [isAdminUser, setIsAdminUser] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     if (!user) return;
+
+    // Check Admin Status
+    const checkAdmin = async () => {
+      try {
+        const adminRef = doc(db, 'admins', user.uid);
+        const adminDoc = await getDoc(adminRef);
+        setIsAdminUser(adminDoc.exists());
+        
+        // Bootstrap admin for the specific user email if needed during development
+        if (!adminDoc.exists() && user.email === 'lebomofube1818@gmail.com' && user.emailVerified) {
+           // We'll set the local state to true to allow access, 
+           // and in a real app, this would be handled by a cloud function or manual DB entry.
+           // For this context, we will allow the owner email to proceed.
+           setIsAdminUser(true);
+        }
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+      }
+    };
+    checkAdmin();
 
     // Fetch User Profile Data
     const fetchProfile = async () => {
@@ -208,7 +228,7 @@ export default function ProfileView({ onBack, onAdminClick, onAuthOpen }: Profil
                     <UserCircle className="w-4 h-4 mr-3" /> Account Settings
                   </Button>
                   
-                  {user.email === 'lebomofube1818@gmail.com' && (
+                  {isAdminUser && (
                     <Button 
                       onClick={onAdminClick}
                       className="w-full justify-start rounded-xl font-bold py-6 bg-brand-primary text-brand-accent hover:bg-gray-800"

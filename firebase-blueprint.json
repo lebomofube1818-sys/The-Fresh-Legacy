@@ -46,6 +46,30 @@
         "mobileNumber": { "type": "string" }
       },
       "required": ["userId", "items", "total", "status", "createdAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Represents a product in the catalog.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "description": { "type": "string" },
+        "images": { "type": "array" },
+        "colors": { "type": "array" },
+        "sizes": { "type": "array" },
+        "gender": { "type": "string", "enum": ["men", "women", "kids", "unisex"] },
+        "sport": { "type": "string", "enum": ["lifestyle", "running", "basketball", "training"] },
+        "isNew": { "type": "boolean" },
+        "isSale": { "type": "boolean" },
+        "isMemberExclusive": { "type": "boolean" },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "stockCount": { "type": "number" }
+      },
+      "required": ["name", "category", "price", "description", "images", "gender", "sport", "stockCount"]
     }
   },
   "firestore": {
@@ -56,6 +80,10 @@
     "orders/{orderId}": {
       "schema": "Order",
       "description": "System-wide orders"
+    },
+    "products/{productId}": {
+      "schema": "Product",
+      "description": "Product catalog details."
     },
     "admins/{adminId}": {
       "schema": { "type": "object", "properties": { "uid": { "type": "string" } } },
